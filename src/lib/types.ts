@@ -25,6 +25,10 @@ export interface Article {
   content: string;
 }
 
+export interface ArticleDraft extends Omit<Article, "id"> {
+  id: number | null;
+}
+
 export type View =
   | { page: "home" }
   | { page: "article"; id: number }

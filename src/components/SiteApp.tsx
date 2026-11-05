@@ -6,8 +6,15 @@ import { Footer, MobileNav, NavBar, SiteHeader, Toast, UrgentTicker, UtilityBar 
 import HomeView from "./HomeView";
 import { AdminLoginModal, SearchModal, SupportModal } from "./Modals";
 import { AboutView, ArticleView, CategoryView, CodeView } from "./PageViews";
-import { INITIAL_ARTICLES, getVisibleArticles } from "@/lib/articles";
-import type { Article, Category, SiteActions, View } from "@/lib/types";
+import {
+  ApiError,
+  deleteArticle as apiDeleteArticle,
+  fetchArticles,
+  saveArticle as apiSaveArticle,
+  uploadImage,
+} from "@/lib/api";
+import { getVisibleArticles } from "@/lib/articles";
+import type { Article, ArticleDraft, Category, SiteActions, View } from "@/lib/types";
 
 type Modal = "support" | "search" | "login" | null;
 
@@ -30,7 +37,8 @@ function formatClock(timestamp: number): string {
 }
 
 export default function SiteApp() {
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [token, setToken] = useState<string | null>(null);
   const [view, setView] = useState<View>({ page: "home" });
   const [modal, setModal] = useState<Modal>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -44,6 +52,22 @@ export default function SiteApp() {
     const id = setInterval(tick, TICK_MS);
     return () => clearInterval(id);
   }, []);
+
+  // Refetch after login so the admin also receives scheduled articles.
+  useEffect(() => {
+    let cancelled = false;
+    fetchArticles(token)
+      .then((list) => {
+        if (!cancelled) setArticles(list);
+      })
+      .catch(() => {
+        if (!cancelled) showToast("Не вдалося завантажити матеріали. Спробуйте оновити сторінку.");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => {
     return () => {
@@ -92,18 +116,52 @@ export default function SiteApp() {
     }
   }
 
-  function saveArticle(article: Article) {
-    setArticles((prev) =>
-      prev.some((a) => a.id === article.id)
-        ? prev.map((a) => (a.id === article.id ? article : a))
-        : [...prev, article],
-    );
-    showToast("Матеріал збережено!");
+  function handleAuthError(e: unknown, fallback: string) {
+    if (e instanceof ApiError && e.status === 401) {
+      setToken(null);
+      setView({ page: "home" });
+      showToast("Сесія завершилась. Увійдіть знову.");
+    } else {
+      showToast(e instanceof Error ? e.message : fallback);
+    }
   }
 
-  function deleteArticle(id: number) {
-    setArticles((prev) => prev.filter((a) => a.id !== id));
-    showToast("Матеріал видалено.");
+  async function saveArticle(draft: ArticleDraft): Promise<boolean> {
+    if (!token) return false;
+    try {
+      const saved = await apiSaveArticle(draft, token);
+      setArticles((prev) =>
+        prev.some((a) => a.id === saved.id)
+          ? prev.map((a) => (a.id === saved.id ? saved : a))
+          : [...prev, saved],
+      );
+      showToast("Матеріал збережено!");
+      return true;
+    } catch (e) {
+      handleAuthError(e, "Не вдалося зберегти матеріал.");
+      return false;
+    }
+  }
+
+  async function deleteArticle(id: number) {
+    if (!token) return;
+    try {
+      await apiDeleteArticle(id, token);
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+      showToast("Матеріал видалено.");
+    } catch (e) {
+      handleAuthError(e, "Не вдалося видалити матеріал.");
+    }
+  }
+
+  async function uploadArticleImage(file: File): Promise<string | null> {
+    if (!token) return null;
+    try {
+      return await uploadImage(file, token);
+    } catch (e) {
+      handleAuthError(e, "Не вдалося завантажити зображення.");
+      return null;
+    }
   }
 
   function renderView() {
@@ -139,6 +197,7 @@ export default function SiteApp() {
             now={now!}
             onSave={saveArticle}
             onDelete={deleteArticle}
+            onUploadImage={uploadArticleImage}
             goHome={actions.goHome}
           />
         );
@@ -200,8 +259,9 @@ export default function SiteApp() {
       {modal === "login" && (
         <AdminLoginModal
           onClose={() => setModal(null)}
-          onSuccess={() => {
+          onSuccess={(newToken) => {
             setModal(null);
+            setToken(newToken);
             navigate({ page: "admin" });
           }}
         />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { verifyAdminLogin } from "@/app/actions";
+import { login } from "@/lib/api";
 import { formatDate, getAuthor } from "@/lib/articles";
 import type { Article } from "@/lib/types";
 
@@ -129,22 +129,25 @@ export function AdminLoginModal({
   onSuccess,
 }: {
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (token: string) => void;
 }) {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPending(true);
-    const ok = await verifyAdminLogin(user, pass);
-    setPending(false);
-    if (ok) {
-      onSuccess();
-    } else {
-      setError(true);
+    setError(null);
+    try {
+      const token = await login(user, pass);
+      if (token) onSuccess(token);
+      else setError("Невірний логін або пароль.");
+    } catch {
+      setError("Сервер недоступний. Якщо він «спав», зачекайте хвилину та повторіть.");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -178,7 +181,7 @@ export function AdminLoginModal({
               required
             />
           </div>
-          {error && <div className="text-red-600 text-xs">Невірний логін або пароль.</div>}
+          {error && <div className="text-red-600 text-xs">{error}</div>}
           <button
             type="submit"
             disabled={pending}

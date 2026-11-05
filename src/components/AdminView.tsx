@@ -10,13 +10,14 @@ import {
   formatDate,
   getAuthor,
 } from "@/lib/articles";
-import type { Article, Badge, Category } from "@/lib/types";
+import type { Article, ArticleDraft, Badge, Category } from "@/lib/types";
 
 interface AdminViewProps {
   articles: Article[];
   now: number;
-  onSave: (article: Article) => void;
+  onSave: (article: ArticleDraft) => Promise<boolean>;
   onDelete: (id: number) => void;
+  onUploadImage: (file: File) => Promise<string | null>;
   goHome: () => void;
 }
 
@@ -49,10 +50,19 @@ const EMPTY_FORM: FormState = {
 const INPUT_CLASS =
   "w-full border dark:border-slate-700 bg-transparent p-2.5 rounded text-sm outline-none focus:border-navy-brand";
 
-export default function AdminView({ articles, now, onSave, onDelete, goHome }: AdminViewProps) {
+export default function AdminView({
+  articles,
+  now,
+  onSave,
+  onDelete,
+  onUploadImage,
+  goHome,
+}: AdminViewProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const sorted = [...articles].sort((a, b) => b.timestamp - a.timestamp);
@@ -68,17 +78,17 @@ export default function AdminView({ articles, now, onSave, onDelete, goHome }: A
     if (editorRef.current) editorRef.current.innerHTML = "";
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") update("imgUrl", reader.result);
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    const url = await onUploadImage(file);
+    setUploading(false);
+    if (url) update("imgUrl", url);
+    else setFileInputKey((k) => k + 1);
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     let timestamp = Date.now();
@@ -86,8 +96,9 @@ export default function AdminView({ articles, now, onSave, onDelete, goHome }: A
       timestamp = new Date(`${form.scheduleDate}T${form.scheduleTime}`).getTime();
     }
 
-    onSave({
-      id: editingId ?? Date.now(),
+    setSaving(true);
+    const ok = await onSave({
+      id: editingId,
       title: form.title,
       category: form.category,
       author: form.author.trim() !== "" ? form.author : DEFAULT_AUTHOR,
@@ -98,7 +109,8 @@ export default function AdminView({ articles, now, onSave, onDelete, goHome }: A
       img: form.imgUrl || DEFAULT_UPLOAD_IMAGE,
       timestamp,
     });
-    resetForm();
+    setSaving(false);
+    if (ok) resetForm();
   }
 
   function editArticle(art: Article) {
@@ -283,6 +295,7 @@ export default function AdminView({ articles, now, onSave, onDelete, goHome }: A
                 className="w-full border dark:border-slate-700 bg-transparent p-2 rounded text-sm"
               />
             </div>
+            {uploading && <span className="text-[10px] text-gray-400 block mt-1">Завантаження зображення...</span>}
             {form.imgUrl && (
               <div className="mt-2">
                 <span className="text-[10px] text-gray-400 block mb-1">Попередній перегляд зображення:</span>
@@ -298,9 +311,10 @@ export default function AdminView({ articles, now, onSave, onDelete, goHome }: A
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-navy-brand text-white rounded text-sm font-semibold hover:bg-navy-800"
+              disabled={saving || uploading}
+              className="px-6 py-2.5 bg-navy-brand text-white rounded text-sm font-semibold hover:bg-navy-800 disabled:opacity-60"
             >
-              Зберегти та опублікувати
+              {saving ? "Збереження..." : "Зберегти та опублікувати"}
             </button>
           </div>
         </form>
