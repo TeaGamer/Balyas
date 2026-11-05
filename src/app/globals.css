@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-navy-50: #f0f4f9;
+  --color-navy-100: #e1e9f3;
+  --color-navy-800: #1e293b;
+  --color-navy-900: #0f172a;
+  --color-navy-brand: #0a192f;
+  --color-navy-accent: #1e3a8a;
+  --font-sans: var(--font-noto-sans), sans-serif;
+  --font-serif: var(--font-merriweather), serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
+  }
+
+  .dark body {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+
+  body {
+    overflow-wrap: break-word;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .editor-btn {
+    padding: 4px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-weight: bold;
+    background: white;
+    font-size: 13px;
+  }
+
+  .dark .editor-btn {
+    background: #334155;
+    border-color: #475569;
+    color: white;
+  }
+
+  .editor-btn:hover {
+    background: #e2e8f0;
+  }
+
+  .dark .editor-btn:hover {
+    background: #475569;
+  }
+
+  .rich-content a {
+    color: #1e3a8a;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  .dark .rich-content a {
+    color: #60a5fa;
+  }
+
+  .rich-content h2 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 1.25rem 0 0.5rem;
+  }
+
+  .rich-content h3 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin: 1rem 0 0.5rem;
+  }
+
+  .rich-content .quote-block,
+  .rich-content blockquote {
+    border-left: 4px solid #0a192f;
+    padding-left: 14px;
+    font-style: normal;
+    margin: 14px 0;
+    color: inherit;
+    display: block;
+  }
+
+  .dark .rich-content .quote-block,
+  .dark .rich-content blockquote {
+    border-color: #f59e0b;
+  }
 }
