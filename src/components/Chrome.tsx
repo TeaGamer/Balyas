@@ -155,10 +155,10 @@ export function UrgentTicker({
 }
 
 const SOCIALS = [
-  { name: "Telegram", icon: "fa-telegram" },
-  { name: "Facebook", icon: "fa-facebook-f" },
-  { name: "Instagram", icon: "fa-instagram" },
-  { name: "YouTube", icon: "fa-youtube" },
+  { name: "Telegram", icon: "fa-telegram", href: "https://t.me/balyas_media" },
+  { name: "Facebook", icon: "fa-facebook-f", href: "" },
+  { name: "Instagram", icon: "fa-instagram", href: "" },
+  { name: "YouTube", icon: "fa-youtube", href: "" },
 ];
 
 interface FooterProps extends Pick<SiteActions, "openCategory" | "openPage" | "showToast"> {
@@ -258,15 +258,28 @@ export function Footer({ openCategory, openPage, showToast, onOpenAdminLogin }: 
               Слідкуйте за нами
             </h4>
             <div className="flex space-x-2 mb-4">
-              {SOCIALS.map(({ name, icon }) => (
-                <button
-                  key={name}
-                  aria-label={name}
-                  onClick={() => showToast("У медіа «Баляс» поки немає цієї платформи.")}
-                  className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center text-sm"
-                >
-                  <i className={`fa-brands ${icon}`}></i>
-                </button>
+              {SOCIALS.map(({ name, icon, href }) => (
+                href.trim() ? (
+                  <a
+                    key={name}
+                    href="https://t.me/balyas_media"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={name}
+                    className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center text-sm"
+                  >
+                    <i className={`fa-brands ${icon}`}></i>
+                  </a>
+                ) : (
+                  <button
+                    key={name}
+                    aria-label={name}
+                    onClick={() => showToast("У медіа «Баляс» поки немає цієї платформи.")}
+                    className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center text-sm"
+                  >
+                    <i className={`fa-brands ${icon}`}></i>
+                  </button>
+                )
               ))}
             </div>
             <p className="text-[10px] text-gray-500">© 2026 ТОВ «Баляс Медіа Group». Всі права захищені.</p>
