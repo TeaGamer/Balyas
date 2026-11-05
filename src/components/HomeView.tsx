@@ -127,7 +127,7 @@ export default function HomeView({ visible, now, openArticle }: HomeViewProps) {
           </section>
         </div>
 
-        <aside className="lg:col-span-4">
+        <aside id="news-feed" className="lg:col-span-4 scroll-mt-4">
           <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-5 sticky top-20 shadow-sm transition-colors">
             <div className="flex justify-between items-center mb-4 border-b dark:border-slate-800 pb-3">
               <div className="flex items-center space-x-2">

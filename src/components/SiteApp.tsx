@@ -75,6 +75,10 @@ export default function SiteApp() {
     };
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
+
   if (now === null) return null;
 
   const visible = getVisibleArticles(articles, now);
@@ -82,7 +86,17 @@ export default function SiteApp() {
 
   function navigate(next: View) {
     setView(next);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function openFeed() {
+    const scrollToFeed = () =>
+      document.getElementById("news-feed")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (view.page === "home") {
+      scrollToFeed();
+    } else {
+      navigate({ page: "home" });
+      setTimeout(scrollToFeed, 100);
+    }
   }
 
   function showToast(message: string) {
@@ -232,8 +246,8 @@ export default function SiteApp() {
       />
       <MobileNav
         goHome={actions.goHome}
+        onOpenFeed={openFeed}
         onOpenSearch={() => setModal("search")}
-        onToggleTheme={toggleTheme}
       />
 
       {modal === "support" && (

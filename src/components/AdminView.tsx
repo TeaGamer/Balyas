@@ -173,7 +173,7 @@ export default function AdminView({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-xs font-semibold uppercase mb-1">Рубрика</label>
               <select
@@ -190,7 +190,7 @@ export default function AdminView({
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase mb-1">
-                Автор / Авторка (За замовчуванням: Команда «Баляс»)
+                Автор / Авторка (за замовч.: Команда «Баляс»)
               </label>
               <input
                 type="text"

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { ClipboardEvent, RefObject } from "react";
 
 function toElement(node: Node | null): Element | null {
@@ -7,7 +8,8 @@ function toElement(node: Node | null): Element | null {
   return node instanceof Element ? node : node.parentElement;
 }
 
-export default function RichTextEditor({ editorRef }: { editorRef: RefObject<HTMLDivElement | null> }) {
+// Memoized so the periodic clock re-render of the app never touches the editable DOM.
+function RichTextEditor({ editorRef }: { editorRef: RefObject<HTMLDivElement | null> }) {
   const exec = (command: string, value?: string) => {
     editorRef.current?.focus();
     document.execCommand(command, false, value);
@@ -116,3 +118,5 @@ export default function RichTextEditor({ editorRef }: { editorRef: RefObject<HTM
     </div>
   );
 }
+
+export default memo(RichTextEditor);
