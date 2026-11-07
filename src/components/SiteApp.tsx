@@ -10,6 +10,7 @@ import {
   ApiError,
   deleteArticle as apiDeleteArticle,
   fetchArticles,
+  fetchSpecialProjects,
   saveArticle as apiSaveArticle,
   uploadImage,
 } from "@/lib/api";
@@ -38,6 +39,7 @@ function formatClock(timestamp: number): string {
 
 export default function SiteApp() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [specialProjects, setSpecialProjects] = useState<Article[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [view, setView] = useState<View>({ page: "home" });
   const [modal, setModal] = useState<Modal>(null);
@@ -63,6 +65,13 @@ export default function SiteApp() {
       .catch(() => {
         if (!cancelled) showToast("Не вдалося завантажити матеріали. Спробуйте оновити сторінку.");
       });
+    fetchSpecialProjects(token)
+      .then((list) => {
+        if (!cancelled) setSpecialProjects(list);
+      })
+      .catch(() => {
+        // The main articles request already reports connectivity problems.
+      });
     return () => {
       cancelled = true;
     };
@@ -82,6 +91,7 @@ export default function SiteApp() {
   if (now === null) return null;
 
   const visible = getVisibleArticles(articles, now);
+  const specials = getVisibleArticles(specialProjects, now).slice(0, 2);
   const urgent = visible.find((a) => a.important);
 
   function navigate(next: View) {
@@ -149,6 +159,10 @@ export default function SiteApp() {
           ? prev.map((a) => (a.id === saved.id ? saved : a))
           : [...prev, saved],
       );
+      setSpecialProjects((prev) => {
+        const rest = prev.filter((a) => a.id !== saved.id);
+        return saved.badge === "СПЕЦПРОЄКТ" ? [...rest, saved] : rest;
+      });
       showToast("Матеріал збережено!");
       return true;
     } catch (e) {
@@ -162,6 +176,7 @@ export default function SiteApp() {
     try {
       await apiDeleteArticle(id, token);
       setArticles((prev) => prev.filter((a) => a.id !== id));
+      setSpecialProjects((prev) => prev.filter((a) => a.id !== id));
       showToast("Матеріал видалено.");
     } catch (e) {
       handleAuthError(e, "Не вдалося видалити матеріал.");
@@ -181,7 +196,7 @@ export default function SiteApp() {
   function renderView() {
     switch (view.page) {
       case "home":
-        return <HomeView visible={visible} now={now!} openArticle={actions.openArticle} />;
+        return <HomeView visible={visible} specials={specials} now={now!} openArticle={actions.openArticle} />;
       case "article":
         return (
           <ArticleView
@@ -248,6 +263,7 @@ export default function SiteApp() {
         goHome={actions.goHome}
         onOpenFeed={openFeed}
         onOpenSearch={() => setModal("search")}
+        onToggleTheme={toggleTheme}
       />
 
       {modal === "support" && (

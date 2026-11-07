@@ -7,6 +7,7 @@ import type { Article, FeedFilter } from "@/lib/types";
 
 interface HomeViewProps {
   visible: Article[];
+  specials: Article[];
   now: number;
   openArticle: (id: number) => void;
 }
@@ -24,14 +25,11 @@ function CategoryBadgeRow({ item }: { item: Article }) {
   );
 }
 
-export default function HomeView({ visible, now, openArticle }: HomeViewProps) {
+export default function HomeView({ visible, specials, now, openArticle }: HomeViewProps) {
   const [filter, setFilter] = useState<FeedFilter>("all");
 
   const hero = visible[0];
   const secondary = visible.slice(1, 5);
-  const specials = visible
-    .filter((a) => a.category === "спецпроєкти" || a.badge === "СПЕЦПРОЄКТ")
-    .slice(0, 2);
   const feed = filter === "important" ? visible.filter((a) => a.important) : visible;
 
   const tabClass = (active: boolean) =>

@@ -30,7 +30,6 @@ export const ADMIN_CATEGORIES: { value: Category; label: string }[] = [
   { value: "світ", label: "Світ" },
   { value: "економіка", label: "Економіка" },
   { value: "технології", label: "Технології" },
-  { value: "спецпроєкти", label: "Спецпроєкти" },
 ];
 
 export const BADGE_OPTIONS: { value: Badge; label: string }[] = [

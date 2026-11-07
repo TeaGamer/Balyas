@@ -314,10 +314,12 @@ export function MobileNav({
   goHome,
   onOpenFeed,
   onOpenSearch,
+  onToggleTheme,
 }: {
   goHome: () => void;
   onOpenFeed: () => void;
   onOpenSearch: () => void;
+  onToggleTheme: () => void;
 }) {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy-brand border-t border-navy-800 text-white z-50 flex justify-around py-2">
@@ -335,6 +337,13 @@ export function MobileNav({
       >
         <i className="fa-solid fa-magnifying-glass text-base"></i>
         <span>Пошук</span>
+      </button>
+      <button
+        onClick={onToggleTheme}
+        className="flex flex-col items-center text-xs text-gray-300 hover:text-white"
+      >
+        <i className="fa-solid fa-moon text-base"></i>
+        <span>Тема</span>
       </button>
     </nav>
   );

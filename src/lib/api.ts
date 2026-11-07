@@ -37,6 +37,11 @@ export function fetchArticles(token?: string | null): Promise<Article[]> {
   return request<Article[]>("/api/articles?limit=200", {}, token);
 }
 
+export function fetchSpecialProjects(token?: string | null): Promise<Article[]> {
+  const badge = encodeURIComponent("СПЕЦПРОЄКТ");
+  return request<Article[]>(`/api/articles?badge=${badge}&limit=10`, {}, token);
+}
+
 export async function login(user: string, password: string): Promise<string | null> {
   try {
     const data = await request<{ access_token: string }>("/api/auth/login", {
